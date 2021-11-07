@@ -13,6 +13,22 @@ export default function Application(props) {
     appointments: {},
     interviewers: {}
   });
+
+  async function bookInterview(id, interview) {
+    console.log(id, interview);
+    const appointment = {
+      ...state.appointments[id],
+      interview: { ...interview }
+    };
+    const appointments = {
+      ...state.appointments,
+      [id]: appointment
+    };
+
+    // Make data persistent
+    await axios.put(`http://localhost:8001/api/appointments/${id}`, {interview})
+      .then(() => setState({ ...state, appointments }));
+  }
   
   const setDay = day => setState({ ...state, day });
   
@@ -40,6 +56,7 @@ export default function Application(props) {
         time={appointment.time}
         interview={interview}
         interviewers={getInterviewersForDay(state, state.day)}
+        bookInterview={bookInterview}
       />
     );
   });
