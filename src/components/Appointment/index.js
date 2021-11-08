@@ -15,7 +15,8 @@ const SHOW = "SHOW";
 const CREATE = "CREATE";
 const EDIT = "EDIT";
 const SAVING = "SAVING";
-const ERROR = "ERROR";
+const ERROR_DELETE = "ERROR_DELETE";
+const ERROR_SAVE = "ERROR_SAVE";
 const DELETING = "DELETING";
 const DELETING_CONFIRMATION = "DELETING_CONFIRMATION";
 
@@ -35,18 +36,18 @@ export default function Appointment(props) {
         transition(SHOW))
       .catch(error => {
         console.log(error);
-        transition(ERROR);
+        transition(ERROR_SAVE, true);
     });
   }
 
   async function cancel() {
-    transition(DELETING);
+    transition(DELETING, true);
     await props.cancelInterview(props.id)
       .then(() => 
         transition(EMPTY))
       .catch(error => {
         console.log(error);
-        transition(ERROR);
+        transition(ERROR_DELETE, true);
     });
   }
 
@@ -62,7 +63,18 @@ export default function Appointment(props) {
         />
       )}
       {mode === DELETING && <Status message={'Deleting'}/>}
-      {mode === ERROR && <Error/>}
+      {mode === ERROR_SAVE && (
+        <Error 
+          message={'Could not save appointment'}
+          onClose={() => back()}
+        />
+      )}
+      {mode === ERROR_DELETE && (
+        <Error 
+          message={'Could not delete appointment'}
+          onClose={() => back()}
+        />
+      )}
       {mode === EMPTY && <Empty onAdd={() => transition(CREATE)} />}
       {mode === SHOW && (
         <Show
