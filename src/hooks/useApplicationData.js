@@ -9,8 +9,19 @@ export default function useApplicationData() {
     interviewers: {}
   });
 
+  // Returns the number of remaining available slots in a day
+  const spotsRemaining = function() {
+    const appointmentIds = state.days.filter(day => day.name === state.day)[0].appointments;
+    let remainingSpots = 0;
+    appointmentIds.forEach(id => {
+      if(state.appointments[id].interview === null) {
+        remainingSpots++;
+      }
+    });
+    return remainingSpots;
+  }
+
   async function bookInterview(id, interview) {
-    console.log(id, interview);
     const appointment = {
       ...state.appointments[id],
       interview: { ...interview }
@@ -20,9 +31,13 @@ export default function useApplicationData() {
       [id]: appointment
     };
 
-    // Make data persistent
+    // Make data persistent after updating remaining spots
     await axios.put(`http://localhost:8001/api/appointments/${id}`, {interview})
-      .then(() => setState({ ...state, appointments }));
+      .then(() => {
+        const dayId = state.days.filter(day => day.name === state.day)[0].id;
+        state.days[dayId - 1].spots = (spotsRemaining() - 1);
+        setState({ ...state, appointments });
+      });
   }
 
   async function cancelInterview(id) {
@@ -35,9 +50,13 @@ export default function useApplicationData() {
       [id]: appointment
     };
 
-    // Make data persistent
+    // Make data persistent after updating remaining spots
     await axios.delete(`http://localhost:8001/api/appointments/${id}`)
-      .then(() => setState({ ...state, appointments }));
+    .then(() => {
+      const dayId = state.days.filter(day => day.name === state.day)[0].id;
+      state.days[dayId - 1].spots = (spotsRemaining() + 1);
+      setState({ ...state, appointments });
+    });
   }
   
   const setDay = day => setState({ ...state, day });
