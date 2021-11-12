@@ -10,11 +10,11 @@ export default function useApplicationData() {
   });
 
   // Returns the number of remaining available slots in a day
-  const spotsRemaining = function() {
+  const spotsRemaining = function(appointments) {
     const appointmentIds = state.days.filter(day => day.name === state.day)[0].appointments;
     let remainingSpots = 0;
     appointmentIds.forEach(id => {
-      if(state.appointments[id].interview === null) {
+      if(appointments[id].interview === null) {
         remainingSpots++;
       }
     });
@@ -35,8 +35,9 @@ export default function useApplicationData() {
     await axios.put(`/api/appointments/${id}`, {interview})
       .then(() => {
         const dayId = state.days.filter(day => day.name === state.day)[0].id;
-        state.days[dayId - 1].spots = (spotsRemaining() - 1);
-        setState({ ...state, appointments });
+        const stateCopy = { ...state };
+        stateCopy.days[dayId - 1].spots = spotsRemaining(appointments);
+        setState({ ...stateCopy, appointments });
       });
   }
 
@@ -52,11 +53,12 @@ export default function useApplicationData() {
 
     // Make data persistent after updating remaining spots
     await axios.delete(`/api/appointments/${id}`)
-    .then(() => {
-      const dayId = state.days.filter(day => day.name === state.day)[0].id;
-      state.days[dayId - 1].spots = (spotsRemaining() + 1);
-      setState({ ...state, appointments });
-    });
+      .then(() => {
+        const dayId = state.days.filter(day => day.name === state.day)[0].id;
+        const stateCopy = { ...state };
+        stateCopy.days[dayId - 1].spots = spotsRemaining(appointments);
+        setState({ ...stateCopy, appointments });
+      });
   }
   
   const setDay = day => setState({ ...state, day });
